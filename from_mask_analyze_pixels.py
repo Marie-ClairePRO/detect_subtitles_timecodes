@@ -153,7 +153,7 @@ class SubtitleDetector:
         avg_overlap = np.mean(overlaps)
         return avg_overlap >= self.spatial_consistency_threshold
     
-    def detect_subtitle_changes(self, video_path, output_srt, verbose=True):
+    def detect_subtitle_changes(self, video_path, output_srt, verbose=True, save_mask=False):
         """
         detect subtitle presence and changes from mask video.
         return dictionary with detection results and statistics
@@ -169,7 +169,14 @@ class SubtitleDetector:
         if div_size > 1:
             print(f"Reduce size by {div_size} for faster processing -- {frame_width // div_size}x{frame_height // div_size}")
         print(f"ROI: {self.w_px}x{self.h_px} \n")
-        
+
+        if save_mask:
+            print(f"Save mask : mask.mp4")
+            fourcc = cv.VideoWriter_fourcc(*'mp4v')
+            out_mask = cv.VideoWriter("mask.mp4", fourcc, fps, (self.w_px, self.h_px), isColor=False)
+            if not out_mask.isOpened():
+                raise ValueError(f"Could not create output video: mask.mp4")
+                
         white_pixel_counts = []
         static_pixel_counts = []
         timestamps = []
@@ -266,6 +273,8 @@ class SubtitleDetector:
 
                 mask_history.clear()
             
+            if save_mask:
+                out_mask.write(current_mask)
             # Add current segment to mask history for temporal analysis next step
             mask_history.append(current_mask)
 
@@ -382,6 +391,7 @@ if __name__ == "__main__":
     parser.add_argument("--video_path", required=True, type=str, help="path to video with subs")
     parser.add_argument("--output_srt", type=str, default="detected_subtitles_timecodes.srt", help="srt file for output")
     parser.add_argument("--verbose", action='store_true', help="save detection analysis plot")
+    parser.add_argument("--mask", action="store_true", help="save sobel mask")
     args = parser.parse_args()
 
     # Initialize detector with parameters
@@ -405,7 +415,8 @@ if __name__ == "__main__":
     results = detector.detect_subtitle_changes(
         video_path=args.video_path,
         output_srt=args.output_srt,
-        verbose=args.verbose
+        verbose=args.verbose,
+        save_mask=args.mask
     )
     
     print("\n✓ complete")
