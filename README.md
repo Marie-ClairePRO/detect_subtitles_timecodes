@@ -8,3 +8,12 @@ It is useful for processing OCR on videos and reduce time processing and GPU pow
 You can then launch for each chunk of timecode the OCR of the middle frame and insert its result in the srt file.
 
 Opensource AIs like qwen-vl are available and very powerful on these tasks.
+
+# requirements
+
+ollama must be installed and running.
+Available models {here}[https://ollama.com/search]
+
+opencv-python==4.12.0.88
+ollama
+requests
